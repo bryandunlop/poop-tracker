@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Poop Tracker 💩</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+  <h2>💩 Poop Tracker</h2>
+  
+  <form id="poopForm">
+    <label for="name">Who's pooping?</label><br>
+    <input type="text" id="name" name="name" required><br><br>
+
+    <label for="manual">Manual Location (optional)</label><br>
+    <input type="text" id="manual" name="manual" placeholder="e.g. Home, Gym, etc"><br><br>
+
+    <p id="gpsStatus">Getting GPS location...</p>
+
+    <button type="submit">Log Poop 💾</button>
+  </form>
+
+  <p id="statusMessage"></p>
+
+  <script>
+    let gpsData = "";
+
+    // Get GPS location on page load
+    navigator.geolocation.getCurrentPosition(function(position) {
+      gpsData = `${position.coords.latitude},${position.coords.longitude}`;
+      document.getElementById("gpsStatus").innerText = "📍 GPS Location Captured";
+    }, function(error) {
+      document.getElementById("gpsStatus").innerText = "⚠️ Could not get GPS location";
+    });
+
+    // Handle form submission
+    document.getElementById("poopForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const name = document.getElementById("name").value;
+      const manual = document.getElementById("manual").value;
+
+      const data = new URLSearchParams();
+      data.append("name", name);
+      data.append("manual", manual);
+      data.append("gps", gpsData);
+
+      fetch("https://script.google.com/macros/s/AKfycbwx-s-v3_TJpm0ZswJHfFrjcZQu_6jyriSHGYqkiNob-_9PhNxFRuSqTTVEFGVRn0upVQ/exec", {
+        method: "POST",
+        body: data
+      })
+      .then(response => response.text())
+      .then(text => {
+        document.getElementById("statusMessage").innerText = "💩 Poop logged!";
+        document.getElementById("poopForm").reset();
+        gpsData = "";  // optional: reset GPS
+      })
+      .catch(err => {
+        document.getElementById("statusMessage").innerText = "⚠️ Error logging poop.";
+        console.error(err);
+      });
+    });
+  </script>
+</body>
+</html>
