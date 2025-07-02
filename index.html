@@ -22,43 +22,50 @@
   <p id="statusMessage"></p>
 
   <script>
-    let gpsData = "";
+  let gpsData = "";
 
-    // Get GPS location on page load
-    navigator.geolocation.getCurrentPosition(function(position) {
-      gpsData = `${position.coords.latitude},${position.coords.longitude}`;
-      document.getElementById("gpsStatus").innerText = "📍 GPS Location Captured";
-    }, function(error) {
-      document.getElementById("gpsStatus").innerText = "⚠️ Could not get GPS location";
+  // Get GPS location on page load
+  navigator.geolocation.getCurrentPosition(function(position) {
+    gpsData = `${position.coords.latitude},${position.coords.longitude}`;
+    document.getElementById("gpsStatus").innerText = "📍 GPS Location Captured";
+  }, function(error) {
+    gpsData = "";  // fallback
+    document.getElementById("gpsStatus").innerText = "⚠️ Could not get GPS location";
+    console.warn("GPS error:", error);
+  });
+
+  document.getElementById("poopForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    const name = document.getElementById("name").value;
+    const manual = document.getElementById("manual").value;
+
+    const data = new URLSearchParams();
+    data.append("name", name);
+    data.append("manual", manual);
+    data.append("gps", gpsData);
+
+    console.log("Sending poop log:", {
+      name,
+      manual,
+      gpsData
     });
 
-    // Handle form submission
-    document.getElementById("poopForm").addEventListener("submit", function(e) {
-      e.preventDefault();
-
-      const name = document.getElementById("name").value;
-      const manual = document.getElementById("manual").value;
-
-      const data = new URLSearchParams();
-      data.append("name", name);
-      data.append("manual", manual);
-      data.append("gps", gpsData);
-
-      fetch("https://script.google.com/macros/s/AKfycbwx-s-v3_TJpm0ZswJHfFrjcZQu_6jyriSHGYqkiNob-_9PhNxFRuSqTTVEFGVRn0upVQ/exec", {
-        method: "POST",
-        body: data
-      })
-      .then(response => response.text())
-      .then(text => {
-        document.getElementById("statusMessage").innerText = "💩 Poop logged!";
-        document.getElementById("poopForm").reset();
-        gpsData = "";  // optional: reset GPS
-      })
-      .catch(err => {
-        document.getElementById("statusMessage").innerText = "⚠️ Error logging poop.";
-        console.error(err);
-      });
+    fetch("https://script.google.com/macros/s/AKfycbwx-s-v3_TJpm0ZswJHfFrjcZQu_6jyriSHGYqkiNob-_9PhNxFRuSqTTVEFGVRn0upVQ/exec", {
+      method: "POST",
+      body: data
+    })
+    .then(response => response.text())
+    .then(text => {
+      document.getElementById("statusMessage").innerText = "💩 Poop logged!";
+      document.getElementById("poopForm").reset();
+      console.log("Response:", text);
+    })
+    .catch(err => {
+      document.getElementById("statusMessage").innerText = "⚠️ Error logging poop: " + err.message;
+      console.error("Fetch error:", err);
     });
-  </script>
+  });
+</script>
 </body>
 </html>
